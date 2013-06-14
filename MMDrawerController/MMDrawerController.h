@@ -193,6 +193,14 @@ typedef void (^MMDrawerControllerDrawerVisualStateBlock)(MMDrawerController * dr
  */
 @property (nonatomic, assign) BOOL showsShadow;
 
+
+/**
+ This allows the center to have a specific background color for the views.  On iOS7, this can prevent
+ a smaller color-flicker under the navigation bar, if the colors match correctly.
+ */
+@property (nonatomic, strong) UIColor * backgroundColor;
+
+
 ///---------------------------------------
 /// @name Initializing a `MMDrawerController`
 ///---------------------------------------
@@ -267,6 +275,11 @@ typedef void (^MMDrawerControllerDrawerVisualStateBlock)(MMDrawerController * dr
 /// @name Setting a new Center View Controller
 ///---------------------------------------
 
+-(void)setCenterViewController:(UIViewController *)newCenterViewController
+                      animated:(BOOL)animateTransition
+            withCloseAnimation:(BOOL)animateClose
+                    completion:(void(^)(BOOL))completion;
+  
 /**
  Sets the new `centerViewController`. 
  

@@ -149,14 +149,15 @@ static CAKeyframeAnimation * bounceKeyFrameAnimationForDistanceOnView(CGFloat di
 }
 
 -(id)initWithCenterViewController:(UIViewController *)centerViewController leftDrawerViewController:(UIViewController *)leftDrawerViewController rightDrawerViewController:(UIViewController *)rightDrawerViewController{
-    NSParameterAssert(centerViewController);
-    self = [self init];
-    if(self){
-        [self setCenterViewController:centerViewController];
-        [self setLeftDrawerViewController:leftDrawerViewController];
-        [self setRightDrawerViewController:rightDrawerViewController];
-    }
-    return self;
+  NSParameterAssert(centerViewController);
+  self = [self init];
+  if(self){
+    self.backgroundColor = [UIColor clearColor];
+    [self setCenterViewController:centerViewController];
+    [self setLeftDrawerViewController:leftDrawerViewController];
+    [self setRightDrawerViewController:rightDrawerViewController];
+  }
+  return self;
 }
 
 -(id)initWithCenterViewController:(UIViewController *)centerViewController leftDrawerViewController:(UIViewController *)leftDrawerViewController{
@@ -295,71 +296,101 @@ static CAKeyframeAnimation * bounceKeyFrameAnimationForDistanceOnView(CGFloat di
 }
 
 #pragma mark - Updating the Center View Controller
--(void)setCenterViewController:(UIViewController *)centerViewController animated:(BOOL)animated{
-    if(_centerContainerView == nil){
-        _centerContainerView = [[MMDrawerCenterContainerView alloc] initWithFrame:self.view.bounds];
-        [self.centerContainerView setAutoresizingMask:UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
-        [self.centerContainerView setBackgroundColor:[UIColor clearColor]];
-        [self.centerContainerView setOpenSide:self.openSide];
-        [self.centerContainerView setCenterInteractionMode:self.centerHiddenInteractionMode];
-        [self.view addSubview:self.centerContainerView];
-    }
-    
-    UIViewController * oldCenterViewController = self.centerViewController;
-    if(oldCenterViewController){
-        if(animated == NO){
-            [oldCenterViewController beginAppearanceTransition:NO animated:NO];
-        }
-        [oldCenterViewController removeFromParentViewController];
-        [oldCenterViewController.view removeFromSuperview];
-        if(animated == NO){
-            [oldCenterViewController endAppearanceTransition];
-        }
-    }
-    
-    _centerViewController = centerViewController;
-    
-    [self addChildViewController:self.centerViewController];
-    [self.centerViewController.view setFrame:self.view.bounds];
-    [self.centerContainerView addSubview:self.centerViewController.view];
-    [self.view bringSubviewToFront:self.centerContainerView];
-    [self.centerViewController.view setAutoresizingMask:UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
-    [self updateShadowForCenterView];
-    
+-(void)setCenterViewController:(UIViewController *)centerViewController animated:(BOOL)animated fade:(BOOL)fade {
+  if(_centerContainerView == nil){
+    _centerContainerView = [[MMDrawerCenterContainerView alloc] initWithFrame:self.view.bounds];
+    [self.centerContainerView setAutoresizingMask:UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
+    [self.centerContainerView setBackgroundColor:[UIColor whiteColor]];
+    [self.centerContainerView setOpenSide:self.openSide];
+    [self.centerContainerView setCenterInteractionMode:self.centerHiddenInteractionMode];
+    [self.view addSubview:self.centerContainerView];
+  }
+  
+  UIViewController * oldCenterViewController = self.centerViewController;
+  if(oldCenterViewController){
     if(animated == NO){
-        [self.centerViewController beginAppearanceTransition:YES animated:NO];
-        [self.centerViewController endAppearanceTransition];
-        [self.centerViewController didMoveToParentViewController:self];
+      [oldCenterViewController beginAppearanceTransition:NO animated:NO];
     }
+    if(!fade) {
+      [oldCenterViewController removeFromParentViewController];
+      [oldCenterViewController.view removeFromSuperview];
+    }
+    if(animated == NO){
+      [oldCenterViewController endAppearanceTransition];
+    }
+  }
+  
+  _centerViewController = centerViewController;
+  
+  [self addChildViewController:self.centerViewController];
+  [self.centerViewController.view setFrame:self.view.bounds];
+  if (fade) {
+    [self.centerViewController.view setAlpha:0.0];
+  }
+  [self.centerContainerView addSubview:self.centerViewController.view];
+  [self.view bringSubviewToFront:self.centerContainerView];
+  [self.centerViewController.view setAutoresizingMask:UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
+  [self updateShadowForCenterView];
+  if (fade) {
+    [UIView animateWithDuration:0.3
+                     animations:^{
+                       [oldCenterViewController.view setAlpha:0.0];
+                       [self.centerViewController.view setAlpha:1.0];
+                     }
+                     completion:^(BOOL finished){
+                       [oldCenterViewController removeFromParentViewController];
+                       [oldCenterViewController.view removeFromSuperview];
+                     }];
+  }
+  
+  if(animated == NO){
+    [self.centerViewController beginAppearanceTransition:YES animated:NO];
+    [self.centerViewController endAppearanceTransition];
+    [self.centerViewController didMoveToParentViewController:self];
+  }
 }
 
--(void)setCenterViewController:(UIViewController *)newCenterViewController withCloseAnimation:(BOOL)animated completion:(void(^)(BOOL))completion{
-    UIViewController * currentCenterViewController = self.centerViewController;
-    [currentCenterViewController beginAppearanceTransition:NO animated:NO];
-    [self setCenterViewController:newCenterViewController animated:animated];
-    [currentCenterViewController endAppearanceTransition];
-    
-    if(self.openSide != MMDrawerSideNone){
-        [self updateDrawerVisualStateForDrawerSide:self.openSide percentVisible:1.0];
-        [self.centerViewController beginAppearanceTransition:YES animated:animated];
-        [self
-         closeDrawerAnimated:animated
-         completion:^(BOOL finished) {
-             [self.centerViewController endAppearanceTransition];
-             [self.centerViewController didMoveToParentViewController:self];
-             if(completion){
-                 completion(finished);
-             }
-         }];
+-(void)setCenterViewController:(UIViewController *)centerViewController animated:(BOOL)animated {
+  [self setCenterViewController:centerViewController animated:animated fade:NO];
+}
+
+-(void)setCenterViewController:(UIViewController *)newCenterViewController
+                      animated:(BOOL)animateTransition
+            withCloseAnimation:(BOOL)animateClose
+                    completion:(void(^)(BOOL))completion {
+  UIViewController * currentCenterViewController = self.centerViewController;
+  [currentCenterViewController beginAppearanceTransition:NO animated:animateTransition];
+  [self setCenterViewController:newCenterViewController animated:animateClose fade:animateTransition];
+  [currentCenterViewController endAppearanceTransition];
+  
+  if(self.openSide != MMDrawerSideNone){
+    [self updateDrawerVisualStateForDrawerSide:self.openSide percentVisible:1.0];
+    [self.centerViewController beginAppearanceTransition:YES animated:animateClose];
+    [self closeDrawerAnimated:animateClose completion:^(BOOL finished) {
+       [self.centerViewController endAppearanceTransition];
+       [self.centerViewController didMoveToParentViewController:self];
+       if(completion){
+         completion(finished);
+       }
+     }];
+  }
+  else {
+    [self.centerViewController beginAppearanceTransition:YES animated:NO];
+    [self.centerViewController endAppearanceTransition];
+    [self.centerViewController didMoveToParentViewController:self];
+    if(completion) {
+      completion(NO);
     }
-    else {
-        [self.centerViewController beginAppearanceTransition:YES animated:NO];
-        [self.centerViewController endAppearanceTransition];
-        [self.centerViewController didMoveToParentViewController:self];
-        if(completion) {
-            completion(NO);
-        }
-    }
+  }
+}
+
+- (void)setCenterViewController:(UIViewController *)newCenterViewController
+            withCloseAnimation:(BOOL)animated
+                    completion:(void(^)(BOOL))completion{
+  [self setCenterViewController:newCenterViewController
+                       animated:NO
+             withCloseAnimation:animated
+                     completion:completion];
 }
 
 -(void)setCenterViewController:(UIViewController *)newCenterViewController withFullCloseAnimation:(BOOL)animated completion:(void(^)(BOOL))completion{
