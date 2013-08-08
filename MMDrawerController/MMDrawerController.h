@@ -131,6 +131,14 @@ typedef void (^MMDrawerControllerDrawerVisualStateBlock)(MMDrawerController * dr
 @property (nonatomic, assign) CGFloat maximumRightDrawerWidth;
 
 /**
+ The minimum width of the `rightDrawerViewController`.
+ 
+ By default, this is set to 0.0. If the `rightDrawerViewController` is nil, this property will return 0.0;
+ 
+ */
+@property (nonatomic, assign) CGFloat minimumRightDrawerWidth;
+
+/**
  The visible width of the `leftDrawerViewController`. 
  
  Note this value can be greater than `maximumLeftDrawerWidth` during the full close animation when setting a new center view controller;

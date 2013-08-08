@@ -112,8 +112,9 @@ static CAKeyframeAnimation * bounceKeyFrameAnimationForDistanceOnView(CGFloat di
 @end
 
 @interface MMDrawerController () <UIGestureRecognizerDelegate>{
-    CGFloat _maximumRightDrawerWidth;
-    CGFloat _maximumLeftDrawerWidth;
+  CGFloat _maximumRightDrawerWidth;
+  CGFloat _maximumLeftDrawerWidth;
+  CGFloat _minimumRightDrawerWidth;
 }
 
 @property (nonatomic, assign, readwrite) MMDrawerSide openSide;
@@ -135,6 +136,7 @@ static CAKeyframeAnimation * bounceKeyFrameAnimationForDistanceOnView(CGFloat di
 	if (self) {
 		[self setMaximumLeftDrawerWidth:MMDrawerDefaultWidth];
 		[self setMaximumRightDrawerWidth:MMDrawerDefaultWidth];
+    [self setMinimumRightDrawerWidth:0.0];
 
 		[self setAnimationVelocity:MMDrawerDefaultAnimationVelocity];
 
@@ -910,7 +912,7 @@ static CAKeyframeAnimation * bounceKeyFrameAnimationForDistanceOnView(CGFloat di
 }
 
 - (void)applyOvershootScaleTransformForDrawerSide:(MMDrawerSide)drawerSide percentVisible:(CGFloat)percentVisible{
-    
+  
     if (percentVisible >= 1.f) {
         CATransform3D transform;
         UIViewController * sideDrawerViewController = [self sideDrawerViewControllerForSide:drawerSide];
